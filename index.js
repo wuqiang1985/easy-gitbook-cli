@@ -8,18 +8,18 @@ const chalk = require('chalk');
 const program = require('commander');
 const download = require('download-git-repo');
 const inquirer = require('inquirer');
+const ora = require('ora');
+const handlebars = require('handlebars');
 const open = require('open');
 
-var pageckage = require('./package');
-// const handlebars = require('handlebars');
+const pageckage = require('./package');
 
-const ora = require('ora');
 let spinner;
 
 let questions = [
   {
     name: 'description',
-    message: '请输入项目描述'
+    message: '请输入文档描述'
   },
   {
     name: 'author',
@@ -63,7 +63,7 @@ function runGitBook() {
   }, 3000);
 }
 
-function installGigBook() {
+function installGitBook() {
   printStart('正在全局安装 GitBook。。。');
   shell.exec('sudo npm i -g gitbook-cli', { silent: true });
   printResult('GitBook 安装成功');
@@ -77,13 +77,27 @@ function installGitbookPlugins() {
       initGitBook();
       runGitBook();
     } else {
-      spinner.fail();
       printResult('GitBook 插件安装失败', 0);
     }
   });
 }
 
-function customProjectInfo() {}
+function setCustomProjectInfo(path, customInfo) {
+  const fileName = `./${path}/book.json`;
+  const customProjectInfo = {
+    year: new Date().getFullYear(),
+    description: customInfo.description,
+    author: customInfo.author
+  };
+
+  printStart('正在写入 个性化信息。。。');
+  if (fs.existsSync(fileName)) {
+    const content = fs.readFileSync(fileName).toString();
+    const result = handlebars.compile(content)(customProjectInfo);
+    fs.writeFileSync(fileName, result);
+  }
+  printResult('个性化信息写入成功');
+}
 
 function exit(code = 1) {
   shell.exit(code);
@@ -92,7 +106,7 @@ function exit(code = 1) {
 function install() {
   program
     .version(pageckage.version, '-v, --version')
-    .command('init <name>')
+    .command('<name>', '创建一个文档')
     .action(name => {
       if (fs.existsSync(name)) {
         printResult('项目已存在', 0, 0);
@@ -107,18 +121,13 @@ function install() {
           { clone: true },
           err => {
             if (!err) {
-              //   spinner.succeed();
               printResult('easy-gitbook-template 下载成功');
 
-              const meta = {
-                name,
-                description: answers.description,
-                author: answers.author
-              };
+              setCustomProjectInfo(name, answers);
 
               const isGitBookInstalled = !!shell.which('gitbook');
               if (!isGitBookInstalled) {
-                installGigBook();
+                installGitBook();
               }
 
               shell.cd(name);

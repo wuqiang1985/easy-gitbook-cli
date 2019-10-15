@@ -1,6 +1,6 @@
 {
   "name": "easy-gitbook-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "一款基于模板生成gitbook文档的脚手架",
   "main": "index.js",
   "scripts": {

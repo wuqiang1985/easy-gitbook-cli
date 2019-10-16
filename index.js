@@ -63,9 +63,19 @@ function runGitBook() {
   }, 3000);
 }
 
+function getGitBookInstallScript() {
+  let script = 'npm i -g gitbook-cli';
+  if (os.platform() !== 'win32' && shell.exec('id -u') !== 0) {
+    // 不是window 且 不是 root 用户
+    script = `sudo ${script}`;
+  }
+
+  return script;
+}
+
 function installGitBook() {
   printStart('正在全局安装 GitBook。。。');
-  shell.exec('sudo npm i -g gitbook-cli', { silent: true });
+  shell.exec(getGitBookInstallScript(), { silent: true });
   printResult('GitBook 安装成功');
 }
 
